@@ -1583,10 +1583,15 @@ Zotero.Integration.Fields.prototype._updateDocument = function(forceCitations, f
 		if(!citation.properties.dontUpdate) {
 			var formattedCitation = citation.properties.custom
 				? citation.properties.custom : this._session.citationText[i];
-			
-			if(formattedCitation.indexOf("\\") !== -1) {
+
+                        var outputFormat = Zotero.Prefs.get("integration.outputFormat") || "rtf";
+			if(outputFormat === "rtf" && formattedCitation.indexOf("\\") !== -1) {
 				// need to set text as RTF
 				formattedCitation = "{\\rtf "+formattedCitation+"}"
+				isRich = true;
+			}
+			else if (outputFormat === "bbl") {
+				// No special wrapping needed since TeXmacs will assume that it is parsing LaTeX bbl.
 				isRich = true;
 			}
 			
@@ -1652,12 +1657,41 @@ Zotero.Integration.Fields.prototype._updateDocument = function(forceCitations, f
 			}
 		}
 		
-		// get bibliography and format as RTF
+		// get bibliography and format as RTF (or bbl)
 		var bib = this._session.getBibliography();
 		
 		var bibliographyText = "";
 		if(bib) {
-			bibliographyText = bib[0].bibstart+bib[1].join("\\\r\n")+"\\\r\n"+bib[0].bibend;
+			var outputFormat = Zotero.Prefs.get("integration.outputFormat") || "rtf";
+			if (outputFormat === "rtf") {
+				bibliographyText = bib[0].bibstart+bib[1].join("\\\r\n")+"\\\r\n"+bib[0].bibend;
+			} 
+			else if (outputFormat === "bbl") {
+				var bibl, bibstart;
+				bibl = (function() {
+					var i, len, ref1, results1;
+					ref1 = bib[1];
+					results1 = [];
+					for (i = 0, len = ref1.length; i < len; i++) {
+						b = ref1[i];
+						results1.push(b.replace(/(\w\.}?) /g, "$1\\hspace{1spc}"));
+					}
+					return results1;
+				})();
+				bibstart = bib[0].bibstart;
+				bibliographyText = bibstart.replace(/9999/, ((function() {
+					var n, i, ref1, results1;
+					results1 = [];
+					for (n = i = 1, ref1 = bib[0].maxoffset; 1 <= ref1 ? i <= ref1 : i >= ref1; n = 1 <= ref1 ? ++i : --i) {
+						results1.push("9");
+					}
+					return results1;
+				})()).join("")) + bibl.join("") + bib[0].bibend;
+			}
+			else {
+				// same as for RTF for now.
+				bibliographyText = bib[0].bibstart+bib[1].join("\\\r\n")+"\\\r\n"+bib[0].bibend;
+			}
 			
 			// if bibliography style not set, set it
 			if(!this._session.data.style.bibliographyStyleHasBeenSet) {
@@ -2129,7 +2163,8 @@ Zotero.Integration.Session.prototype.setData = function(data, resetStyle) {
 			var getStyle = Zotero.Styles.get(data.style.styleID);
 			data.style.hasBibliography = getStyle.hasBibliography;
 			this.style = getStyle.getCiteProc(data.style.locale, data.prefs.automaticJournalAbbreviations);
-			this.style.setOutputFormat("rtf");
+                        var outputFormat = Zotero.Prefs.get("integration.outputFormat") || "rtf";
+			this.style.setOutputFormat(outputFormat);
 			this.styleClass = getStyle.class;
 			this.dateModified = new Object();
 			this.style.setLangTagsForCslTransliteration(data.prefs.citationTransliteration);
@@ -3022,9 +3057,35 @@ Zotero.Integration.Session.BibliographyEditInterface = function(session) {
  */
 Zotero.Integration.Session.BibliographyEditInterface.prototype._update = function() {
 	this.session.updateUncitedItems();
-	this.session.style.setOutputFormat("rtf");
+        var outputFormat = Zotero.Prefs.get("integration.outputFormat") || "rtf";
+	this.session.style.setOutputFormat(outputFormat);
 	this.bibliography = this.session.style.makeBibliography();
 	Zotero.Cite.removeFromBibliography(this.bibliography, this.session.omittedItems);
+
+	if (outputFormat === "bbl") {
+		var bibl, bibstart;
+		bibl = (function() {
+			var i, len, ref1, results1;
+			ref1 = this.bibliography[1];
+			results1 = [];
+			for (i = 0, len = ref1.length; i < len; i++) {
+				b = ref1[i];
+				results1.push(b.replace(/(\w\.}?) /g, "$1\\hspace{1spc}"));
+			}
+			return results1;
+		})();
+		this.bibliography[1] = bibl;
+		bibstart = this.bibliography[0].bibstart;
+		bibstart = bibstart.replace(/9999/, ((function() {
+			var n, i, ref1, results1;
+			results1 = [];
+			for (n = i = 1, ref1 = bib[0].maxoffset; 1 <= ref1 ? i <= ref1 : i >= ref1; n = 1 <= ref1 ? ++i : --i) {
+				results1.push("9");
+			}
+			return results1;
+		})()));
+		this.bibliography[1].bibstart = bibstart;
+	}
 	
 	for(var i in this.bibliography[0].entry_ids) {
 		if(this.bibliography[0].entry_ids[i].length != 1) continue;
