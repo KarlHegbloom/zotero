@@ -1267,6 +1267,17 @@ Zotero.Item.prototype.getDisplayTitle = function (includeAuthorAndDate) {
 				strParts.push(section);
 			}
 		}
+		if (!strParts.length) {
+			var regulationType = this.getField('regulationType');
+			var publicLawNumber = this.getField('publicLawNumber');
+			if (regulationType) {
+				strParts.push(regulationType);
+			}
+			if (publicLawNumber) {
+				strParts.push(publicLawNumber);
+			}
+		}
+
 		if (strParts.length) {
 			title = '[' + strParts.join(' ') + ']';
 		}
