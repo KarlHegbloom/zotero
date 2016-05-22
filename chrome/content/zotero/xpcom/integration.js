@@ -1665,11 +1665,11 @@ Zotero.Integration.Fields.prototype._updateDocument = function(forceCitations, f
 			var outputFormat = Zotero.Prefs.get("integration.outputFormat") || "rtf";
 			if (outputFormat === "rtf") {
 				bibliographyText = bib[0].bibstart+bib[1].join("\\\r\n")+"\\\r\n"+bib[0].bibend;
-			} 
+			}
 			else if (outputFormat === "bbl") {
 				var bibl, bibstart;
 				bibl = (function() {
-					var i, len, ref1, results1;
+					var b, i, len, ref1, results1;
 					ref1 = bib[1];
 					results1 = [];
 					for (i = 0, len = ref1.length; i < len; i++) {
@@ -3065,7 +3065,7 @@ Zotero.Integration.Session.BibliographyEditInterface.prototype._update = functio
 	if (outputFormat === "bbl") {
 		var bibl, bibstart;
 		bibl = (function() {
-			var i, len, ref1, results1;
+			var b, i, len, ref1, results1;
 			ref1 = this.bibliography[1];
 			results1 = [];
 			for (i = 0, len = ref1.length; i < len; i++) {
