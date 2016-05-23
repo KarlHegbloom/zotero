@@ -1590,10 +1590,10 @@ Zotero.Integration.Fields.prototype._updateDocument = function(forceCitations, f
 				formattedCitation = "{\\rtf "+formattedCitation+"}"
 				isRich = true;
 			}
-			else if (outputFormat === "bbl") {
-				// No special wrapping needed since TeXmacs will assume that it is parsing LaTeX bbl.
-				isRich = true;
-			}
+                        else if (outputFormat === "bbl") {
+                                formattedCitation = formattedCitation.replace(/X-X-X ?/g, "")
+                                        .replace(/(\w\.}?) /g, "$1\\hspace{0.666spc}");
+                        }
 			
 			if(forceCitations === FORCE_CITATIONS_RESET_TEXT
 					|| citation.properties.formattedCitation !== formattedCitation) {
@@ -1643,10 +1643,10 @@ Zotero.Integration.Fields.prototype._updateDocument = function(forceCitations, f
 	}
 	
 	// update bibliographies
-	if(this._bibliographyFields.length	 				// if bibliography exists
-			&& (this._session.bibliographyHasChanged	// and bibliography changed
-			|| forceBibliography)) {					// or if we should generate regardless of
-														// changes
+	if(this._bibliographyFields.length			// if bibliography exists
+		&& (this._session.bibliographyHasChanged	// and bibliography changed
+		|| forceBibliography)) {			// or if we should generate regardless of
+								// changes
 		var bibliographyFields = this._bibliographyFields;
 		
 		if(forceBibliography || this._session.bibliographyDataHasChanged) {
@@ -1657,7 +1657,7 @@ Zotero.Integration.Fields.prototype._updateDocument = function(forceCitations, f
 			}
 		}
 		
-		// get bibliography and format as RTF (or bbl)
+		// get bibliography and format
 		var bib = this._session.getBibliography();
 		
 		var bibliographyText = "";
@@ -1674,19 +1674,23 @@ Zotero.Integration.Fields.prototype._updateDocument = function(forceCitations, f
 					results1 = [];
 					for (i = 0, len = ref1.length; i < len; i++) {
 						b = ref1[i];
-						results1.push(b.replace(/(\w\.}?) /g, "$1\\hspace{1spc}"));
+						results1.push(b.replace(/(X-X-X ?)/g, "").replace(/(\w\.}?) /g, "$1\\hspace{0.666spc}"));
 					}
 					return results1;
 				})();
+                                bib[1] = bibl;
 				bibstart = bib[0].bibstart;
 				bibliographyText = bibstart.replace(/9999/, ((function() {
-					var n, i, ref1, results1;
+					var n, i, max, maxmax, ref1, results1;
 					results1 = [];
-					for (n = i = 1, ref1 = bib[0].maxoffset; 1 <= ref1 ? i <= ref1 : i >= ref1; n = 1 <= ref1 ? ++i : --i) {
+                                        max = bib[0].maxoffset;
+                                        maxmax = Zotero.Prefs.get("integration.maxmaxOffset") || 16;
+                                        if (max > maxmax) max = maxmax;
+					for (n = i = 1, ref1 = max; 1 <= ref1 ? i <= ref1 : i >= ref1; n = 1 <= ref1 ? ++i : --i) {
 						results1.push("9");
 					}
 					return results1;
-				})()).join("")) + bibl.join("") + bib[0].bibend;
+				})()).join("")) + bib[1].join("") + bib[0].bibend;
 			}
 			else {
 				// same as for RTF for now.
@@ -3061,31 +3065,6 @@ Zotero.Integration.Session.BibliographyEditInterface.prototype._update = functio
 	this.session.style.setOutputFormat(outputFormat);
 	this.bibliography = this.session.style.makeBibliography();
 	Zotero.Cite.removeFromBibliography(this.bibliography, this.session.omittedItems);
-
-	if (outputFormat === "bbl") {
-		var bibl, bibstart;
-		bibl = (function() {
-			var b, i, len, ref1, results1;
-			ref1 = this.bibliography[1];
-			results1 = [];
-			for (i = 0, len = ref1.length; i < len; i++) {
-				b = ref1[i];
-				results1.push(b.replace(/(\w\.}?) /g, "$1\\hspace{1spc}"));
-			}
-			return results1;
-		})();
-		this.bibliography[1] = bibl;
-		bibstart = this.bibliography[0].bibstart;
-		bibstart = bibstart.replace(/9999/, ((function() {
-			var n, i, ref1, results1;
-			results1 = [];
-			for (n = i = 1, ref1 = bib[0].maxoffset; 1 <= ref1 ? i <= ref1 : i >= ref1; n = 1 <= ref1 ? ++i : --i) {
-				results1.push("9");
-			}
-			return results1;
-		})()));
-		this.bibliography[1].bibstart = bibstart;
-	}
 	
 	for(var i in this.bibliography[0].entry_ids) {
 		if(this.bibliography[0].entry_ids[i].length != 1) continue;
