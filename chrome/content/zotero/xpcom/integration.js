@@ -1584,16 +1584,26 @@ Zotero.Integration.Fields.prototype._updateDocument = function(forceCitations, f
 			var formattedCitation = citation.properties.custom
 				? citation.properties.custom : this._session.citationText[i];
 
-                        var outputFormat = Zotero.Prefs.get("integration.outputFormat") || "rtf";
+			// This creates an abbreviation that completely removes something. It is not
+			// possible to set an abbrev to the empty string, since in the interface
+			// that causes it to reset to the default value. It is hard to imagine
+			// anyone really wanting the string "X-X-X " to appear in a
+			// citation. Substitute it with the empty string for all output formats.
+			//
+			formattedCitation = formattedCitation.replace(/X-X-X ?/g, "");
+
+			var outputFormat = Zotero.Prefs.get("integration.outputFormat") || "rtf";
+
 			if(outputFormat === "rtf" && formattedCitation.indexOf("\\") !== -1) {
 				// need to set text as RTF
 				formattedCitation = "{\\rtf "+formattedCitation+"}"
 				isRich = true;
 			}
-                        else if (outputFormat === "bbl") {
-                                formattedCitation = formattedCitation.replace(/X-X-X ?/g, "")
-                                        .replace(/(\w\.}?) /g, "$1\\hspace{0.666spc}");
-                        }
+			else if (outputFormat === "bbl") {
+				var hspace = Zotero.Prefs.get("integration.hspace") || "1spc";
+				formattedCitation = formattedCitation.replace(/(\w\.}?) /g, "$1\\hspace{" + hspace + "}")
+					.replace(/(\w\.)! /g, "$1 "); // Remove ! from .!
+			}
 			
 			if(forceCitations === FORCE_CITATIONS_RESET_TEXT
 					|| citation.properties.formattedCitation !== formattedCitation) {
@@ -1662,38 +1672,80 @@ Zotero.Integration.Fields.prototype._updateDocument = function(forceCitations, f
 		
 		var bibliographyText = "";
 		if(bib) {
-			var outputFormat = Zotero.Prefs.get("integration.outputFormat") || "rtf";
-			if (outputFormat === "rtf") {
-				bibliographyText = bib[0].bibstart+bib[1].join("\\\r\n")+"\\\r\n"+bib[0].bibend;
-			}
-			else if (outputFormat === "bbl") {
-				var bibl, bibstart;
-				bibl = (function() {
-					var b, i, len, ref1, results1;
-					ref1 = bib[1];
-					results1 = [];
-					for (i = 0, len = ref1.length; i < len; i++) {
-						b = ref1[i];
-						results1.push(b.replace(/(X-X-X ?)/g, "").replace(/(\w\.}?) /g, "$1\\hspace{0.666spc}"));
+			var bibl, bibstart, outputFormat;
+
+			outputFormat = Zotero.Prefs.get("integration.outputFormat") || "rtf";
+
+			// Initially compiled from coffeescript, then extended by hand here.
+			//
+			// bibl = (b.replace(/(\w\.}?) /g, "$1\\hspace{1spc}") for b in bib[1])
+			//
+			bibl = (function() {
+				var b, i, len, ref1, results1, hspace;
+				ref1 = bib[1];
+				results1 = [];
+				for (i = 0, len = ref1.length; i < len; i++) {
+					b = ref1[i];
+					// For any outputFormat, abbreviatioon to X-X-X causes
+					// complete deletion of a string from the output. It is not
+					// possible to set an abbrev to the empty string.
+					//
+					b = b.replace(/X-X-X ?/g, "");
+					//
+					// Spaces after periods inside citations are not periods
+					// after sentences. The typesetter in TeXmacs will make the
+					// space following a period wider when it needs the stretch
+					// to fill the block with fewer hyphenations, but that often
+					// makes citations look too stretched out. The CSL
+					// outputFormat specification can not easily do this since
+					// sometimes the period will be followed by a '}' and then a
+					// space, at a transition from one typeface to
+					// another. Thus, there is a need for post-processing the
+					// strings.
+					//
+					// But allow .! to preserve the normal space after the period.
+					//
+					if (outputFormat === "bbl") {
+						hspace = Zotero.Prefs.get("integration.hspace") || "1spc";
+						b = b.replace(/(\w\.}?) /g, "$1\\hspace{" + hspace + "}")
+							.replace(/(\w\.)! /g, "$1 "); // Remove ! from .!
 					}
-					return results1;
-				})();
-                                bib[1] = bibl;
+					results1.push(b);
+				}
+				return results1;
+			})();
+			bib[1] = bibl;
+
+			if (outputFormat === "bbl") {
 				bibstart = bib[0].bibstart;
+				//
+				// The number inside of the \begin{thebibliography}{9999} is a width
+				// template, where maxoffset is number of characters. This will
+				// convert one to the other, and replace the initial 9999 with what
+				// will hopefully be the right width. Again, this must be done as a
+				// post-process, since it's not until the entire bibliography is
+				// completed that we know what maxoffset's value is.
+				//
 				bibliographyText = bibstart.replace(/9999/, ((function() {
 					var n, i, max, maxmax, ref1, results1;
 					results1 = [];
-                                        max = bib[0].maxoffset;
-                                        maxmax = Zotero.Prefs.get("integration.maxmaxOffset") || 16;
-                                        if (max > maxmax) max = maxmax;
+					max = bib[0].maxoffset;
+					maxmax = Zotero.Prefs.get("integration.maxmaxOffset") || 16;
+					if (max > maxmax) max = maxmax;
 					for (n = i = 1, ref1 = max; 1 <= ref1 ? i <= ref1 : i >= ref1; n = 1 <= ref1 ? ++i : --i) {
 						results1.push("9");
 					}
 					return results1;
-				})()).join("")) + bib[1].join("") + bib[0].bibend;
+				})()).join("")) + bibl.join("") + bib[0].bibend;
+			}
+			else if (outputFormat === "rtf") {
+				bibliographyText = bib[0].bibstart+bib[1].join("\\\r\n")+"\\\r\n"+bib[0].bibend;
 			}
 			else {
-				// same as for RTF for now.
+				// Same as for RTF for now... (could be HTML or any format defined and called for)
+				// If there turns out to be more than a few then perhaps a way to inject this
+				// behaviour, or even custom behaviour as in the X-X-X hack above, ought to be
+				// implemented?
 				bibliographyText = bib[0].bibstart+bib[1].join("\\\r\n")+"\\\r\n"+bib[0].bibend;
 			}
 			
@@ -2167,7 +2219,7 @@ Zotero.Integration.Session.prototype.setData = function(data, resetStyle) {
 			var getStyle = Zotero.Styles.get(data.style.styleID);
 			data.style.hasBibliography = getStyle.hasBibliography;
 			this.style = getStyle.getCiteProc(data.style.locale, data.prefs.automaticJournalAbbreviations);
-                        var outputFormat = Zotero.Prefs.get("integration.outputFormat") || "rtf";
+			var outputFormat = Zotero.Prefs.get("integration.outputFormat") || "rtf";
 			this.style.setOutputFormat(outputFormat);
 			this.styleClass = getStyle.class;
 			this.dateModified = new Object();
@@ -3061,7 +3113,7 @@ Zotero.Integration.Session.BibliographyEditInterface = function(session) {
  */
 Zotero.Integration.Session.BibliographyEditInterface.prototype._update = function() {
 	this.session.updateUncitedItems();
-        var outputFormat = Zotero.Prefs.get("integration.outputFormat") || "rtf";
+	var outputFormat = Zotero.Prefs.get("integration.outputFormat") || "rtf";
 	this.session.style.setOutputFormat(outputFormat);
 	this.bibliography = this.session.style.makeBibliography();
 	Zotero.Cite.removeFromBibliography(this.bibliography, this.session.omittedItems);
