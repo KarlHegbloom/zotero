@@ -1219,7 +1219,7 @@ Zotero.Item.prototype.getDisplayTitle = function (includeAuthorAndDate) {
 			title += ']';
 		}
 	}
-	else if ([16,18,20,1261,1263].indexOf(itemTypeID) > -1) {
+	else if ([16,18,19,20,1261,1263].indexOf(itemTypeID) > -1) {
 		var strParts = [];
 		// Not needed, this mapping seems to be handled by higher layers.
 		//if (itemTypeID == 20) {
@@ -1275,6 +1275,13 @@ Zotero.Item.prototype.getDisplayTitle = function (includeAuthorAndDate) {
 			}
 			if (publicLawNumber) {
 				strParts.push(publicLawNumber);
+			}
+		}
+
+		if (!strParts.length) {
+			var genre = this.getField('genre');
+			if (genre) {
+				strParts.push(genre);
 			}
 		}
 
