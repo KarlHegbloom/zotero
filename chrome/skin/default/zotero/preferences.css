@@ -1,3 +1,8 @@
+.lang-prefs-row {
+    /* min-height: 1.1em; */
+    /* max-height: 1.1em; */
+}
+
 .language-role-highlight {
 	background:#fdfdfd;
     -moz-transition: background-color 0s linear 0.25s;
@@ -14,13 +19,29 @@
     margin: 0;
 }
 
-.translit-primary label {
-	margin: 0 0 0 0;
+radio {
+    padding: 0 0 0 0;
+    margin: 0 0 0 0;
 }
+
+.radio-affix {
+    min-width: 1.5em;
+    margin: 0 0 0 0;
+    padding: 0 0 0 0;
+}
+
+.checkbox-affix {
+    min-width: 0.8em;
+    margin: 0 0 0 0;
+    padding: 0 0 0 0;
+}
+
+.checkbox-checkbox {
+    margin: 0 0 0 0;
+    padding: 0 0 0 0;
+}
+
 .translit-secondary label {
-	margin: 0 0 0 0;
-}
-.translat-primary label {
 	margin: 0 0 0 0;
 }
 .translat-secondary label {

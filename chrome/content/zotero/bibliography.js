@@ -484,23 +484,10 @@ var Zotero_File_Interface_Bibliography = new function() {
 		for (var i = 0, ilen = classes.length; i < ilen; i += 1) {
 			var nodes = document.getElementsByClassName(classes[i]);
 			for (var j = 0, jlen = nodes.length; j < jlen; j += 1) {
-				var lst;
-				var str = nodes[j].getAttribute("class");
-				if (str) {
-					lst = str.split(/\s+/);
-				} else {
-					lst = [];
-				}
 				if (mode) {
-					lst.push("language-role-highlight");
-					nodes[j].setAttribute("class", lst.join(" "));
+					nodes[j].classList.add('language-role-highlight');
 				} else {
-					for (var k = lst.length - 1; k > -1; k += -1) {
-						if (lst[k] === "language-role-highlight") {
-							lst = lst.slice(0, k).concat(lst.slice(k + 1));
-						}
-					}
-					nodes[j].setAttribute("class", lst.join(" "));
+					nodes[j].classList.remove('language-role-highlight');
 				}
 			}
 		}

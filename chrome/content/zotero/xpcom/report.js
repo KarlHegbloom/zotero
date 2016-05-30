@@ -274,8 +274,14 @@ Zotero.Report = new function() {
 				fieldText = escapeXML(arr[i]);
 			}
 			
+			if (i == 'extra') {
+				var styleAttrib = ' style="border:2px solid black;padding:2px;border-radius:0.5em;"';
+			} else {
+				var styleAttrib = '';
+			}
+
 			content += '<tr>\n<th>' + escapeXML(localizedFieldName)
-				+ '</th>\n<td>' + fieldText + '</td>\n</tr>\n';
+				+ '</th>\n<td' + styleAttrib + '>' + fieldText + '</td>\n</tr>\n';
 		}
 		
 		content += '</table>';

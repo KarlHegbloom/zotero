@@ -28,14 +28,17 @@
 Zotero_Preferences.Lang = {
 	
 	init: function () {
+try {
+        Zotero.debug('XXX Go 1');
         var startTime = Date.now();
- 	    Zotero_Preferences.Lang.refreshMenus();
+	    Zotero_Preferences.Lang.refreshMenus();
  	    Zotero_Preferences.Lang.refreshLanguages();
  	    var radios = ['Persons', 'Institutions', 'Titles', 'Journals', 'Publishers', 'Places']
  	    var forms = ['orig', 'translit', 'translat'];
  	    // Check for a settings in Prefs. For those not found, set to orig.
  	    // Then set language in node.
  	    // Then update disable status on partner nodes.
+        Zotero.debug('XXX Go 2');
  	    for (var i = 0, ilen = radios.length; i < ilen; i += 1) {
  		    var settings = Zotero.Prefs.get("csl.citation" + radios[i]).split(',');
  		    if (!settings || !settings[0] || forms.indexOf(settings[0]) == -1) {
@@ -43,7 +46,11 @@ Zotero_Preferences.Lang = {
  		    }
  		    Zotero_Preferences.Lang.citationLangSet(radios[i], true);
  	    }
+        Zotero.debug('XXX Go 3');
  	    Zotero.setupLocale(document);
+} catch (e) {
+    Zotero.debug('XXX Go Ouch: '+e);
+}
 	},
 	
     refreshMenus: function () {
@@ -525,28 +532,15 @@ Zotero_Preferences.Lang = {
  		    'citationSort'
  	    ];
  	    for (var j = 0, jlen = languageSelectorTypes.length; j < jlen; j += 1) {
-            var param = languageSelectorTypes[j];
- 		    var newselector = Zotero_Preferences.Lang.buildSelector('default',tag, param);
+ 		    var newselector = Zotero_Preferences.Lang.buildSelector('default',tag,languageSelectorTypes[j]);
  		    if ((j % 5) == 2) {
  			    newselector.setAttribute("class", "translit");
  			    newselector.setAttribute("onmouseover", "Zotero_Preferences.Lang.setLanguageRoleHighlight(['translit-primary', 'translit-secondary', 'translit'],true);");
  			    newselector.setAttribute("onmouseout", "Zotero_Preferences.Lang.setLanguageRoleHighlight(['translit-primary', 'translit-secondary', 'translit'],false);");
-                if (tag.tag.match(/^[a-zA-Z]{2,3}(?:-[a-zA-Z]{2})*$/)) {
-                    var checkbox = newselector.childNodes[1].firstChild;
-                    Zotero_Preferences.Lang._setLangPref(false, 'default', param, tag.tag);
-                    checkbox.setAttribute('checked', false);
-                    checkbox.setAttribute('disabled', true);
-                }
  		    } else if ((j % 5) == 3) {
  			    newselector.setAttribute("class", "translat");
  			    newselector.setAttribute("onmouseover", "Zotero_Preferences.Lang.setLanguageRoleHighlight(['translat-primary', 'translat-secondary', 'translat'],true);");
  			    newselector.setAttribute("onmouseout", "Zotero_Preferences.Lang.setLanguageRoleHighlight(['translat-primary', 'translat-secondary', 'translat'],false);");
-                if (!tag.tag.match(/^[a-zA-Z]{2,3}(?:-[a-zA-Z]{2})*$/)) {
-                    var checkbox = newselector.childNodes[1].firstChild;
-                    Zotero_Preferences.Lang._setLangPref(false, 'default', param, tag.tag);
-                    checkbox.setAttribute('checked', false);
-                    checkbox.setAttribute('disabled', true);
-                }
  		    }
  		    row.appendChild(newselector);
  	    }
@@ -617,13 +611,6 @@ Zotero_Preferences.Lang = {
  	    var param = target.getAttribute('param');
  	    var tag = target.getAttribute('value');
  	    var enable = target.hasAttribute('checked');
-        Zotero_Preferences.Lang._setLangPref(enable, 'default', param, tag);
- 	    var langRow = document.getElementById(tag+'::row');
- 	    var removeButton = langRow.lastChild.lastChild.previousSibling;
-	    Zotero_Preferences.Lang.setRemoveDisable(removeButton,tag);
-    },
-    
-    _setLangPref: function (enable, profile, param, tag) {
  	    if (enable) {
  		    var sql = 'INSERT INTO zlsPreferences VALUES (?,?,?)';
  		    Zotero.DB.query(sql,['default',param,tag]);
@@ -632,7 +619,11 @@ Zotero_Preferences.Lang = {
  		    Zotero.DB.query(sql,['default',param,tag]);
  	    }
  	    Zotero.CachedLanguagePreferences.taint();
+ 	    var langRow = document.getElementById(tag+'::row');
+ 	    var removeButton = langRow.lastChild.lastChild.previousSibling;
+ 	    Zotero_Preferences.Lang.setRemoveDisable(removeButton,tag);
     },
+    
 
     capFirst: function (str) {
  	    return str[0].toUpperCase() + str.slice(1);

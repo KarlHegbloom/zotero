@@ -77,7 +77,7 @@
 <!ENTITY zotero.preferences.keys.toggleFullscreen "Koko ruudun tila">
 <!ENTITY zotero.preferences.keys.toggleTagSelector "Aiheenvalitsin päälle/pois">
 <!ENTITY zotero.preferences.lang.addLanguage "Add a language">
-<!ENTITY zotero.preferences.lang.configureCitations "(3) Configure citations &#8680;">
+<!ENTITY zotero.preferences.lang.configureCitations "(1) Configure citations &#8680;">
 <!ENTITY zotero.preferences.lang.csl "CSL:">
 <!ENTITY zotero.preferences.lang.display "Display">
 <!ENTITY zotero.preferences.lang.inCitationsAndBibliographies "In citations and bibliographies">

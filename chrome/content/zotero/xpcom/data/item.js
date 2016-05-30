@@ -1284,6 +1284,17 @@ Zotero.Item.prototype.getDisplayTitle = function (includeAuthorAndDate) {
 				strParts.push(genre);
 			}
 		}
+		
+		if (itemTypeID == 16 && !strParts.length) {
+			var resolutionLabel = this.getField('resolutionLabel');
+			if (resolutionLabel) {
+				strParts.push(resolutionLabel);
+			}
+			var number = this.getField('billNumber');
+			if (number) {
+				strParts.push(number);
+			}
+		}
 
 		if (strParts.length) {
 			title = '[' + strParts.join(' ') + ']';
@@ -5480,11 +5491,20 @@ Zotero.Item.prototype.toArray = function (mode) {
 		}
 	}
 
+	// In the following:
+	//  8 = letter
+	//  10 = interview
+	//  16 = bill
+	//  17 = case
+	//  18 = hearing
+	//  19 = patent
+	//  20 = statute
+	//  1261 = gazette
+	//  1263 = regulation
 
 	if (mode == 1 || mode == 2) {
 		if (!arr.title &&
-				(this.itemTypeID == Zotero.ItemTypes.getID('letter') ||
-				this.itemTypeID == Zotero.ItemTypes.getID('interview'))) {
+				([8, 10, 16, 17, 18, 19, 20, 1261, 1263].indexOf(this.itemTypeID) > -1)) {
 			arr.title = this.getDisplayTitle(mode == 2) + '';
 		}
 	}
@@ -5506,10 +5526,7 @@ Zotero.Item.prototype.toArray = function (mode) {
 			creator.birthYear = '';
 			creator.multi = {};
 			creator.multi._key = {};
-			for each (var langTag in creators[i].multi._key) {
-				if (!creators[i].multi._key[langTag]) {
-					creator.multi._key[langTag] = {};
-				}
+			for (var langTag in creators[i].multi._key) {
 				creator.multi._key[langTag] = {
 					lastName: creators[i].multi._key[langTag].lastName,
 					firstName: creators[i].multi._key[langTag].firstName
@@ -5649,11 +5666,12 @@ Zotero.Item.prototype.serialize = function(mode) {
 			arr.multi._keys[fieldName][langTag] = this.multi._keys[fieldID][langTag];
 		}
 	}
+
+	// See above
 	
 	if (mode == 1 || mode == 2) {
 		if (!arr.fields.title &&
-				(this.itemTypeID == Zotero.ItemTypes.getID('letter') ||
-				this.itemTypeID == Zotero.ItemTypes.getID('interview'))) {
+			([8, 10, 16, 17, 18, 19, 20, 1261, 1263].indexOf(this.itemTypeID) > -1)) {
 			arr.fields.title = this.getDisplayTitle(mode == 2) + '';
 		}
 	}

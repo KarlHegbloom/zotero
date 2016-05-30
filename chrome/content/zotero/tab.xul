@@ -18,7 +18,7 @@
 %brandDTD;
 ]>
 
-<page id="zotero-tab" title="ML-Zotero" role="application"
+<page id="zotero-tab" title="Juris-M" role="application"
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
 		xmlns:xhtml="http://www.w3.org/1999/xhtml" disablefastfind="true"
 		flex="1"> 
