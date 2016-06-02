@@ -1599,11 +1599,6 @@ Zotero.Integration.Fields.prototype._updateDocument = function(forceCitations, f
 				formattedCitation = "{\\rtf "+formattedCitation+"}"
 				isRich = true;
 			}
-			else if (outputFormat === "bbl") {
-				var hspace = Zotero.Prefs.get("integration.hspace") || "1spc";
-				formattedCitation = formattedCitation.replace(/(\w\.}?) /g, "$1\\hspace{" + hspace + "}")
-					.replace(/(\w\.)! /g, "$1 "); // Remove ! from .!
-			}
 			
 			if(forceCitations === FORCE_CITATIONS_RESET_TEXT
 					|| citation.properties.formattedCitation !== formattedCitation) {
@@ -1692,24 +1687,6 @@ Zotero.Integration.Fields.prototype._updateDocument = function(forceCitations, f
 					//
 					b = b.replace(/X-X-X ?/g, "");
 					//
-					// Spaces after periods inside citations are not periods
-					// after sentences. The typesetter in TeXmacs will make the
-					// space following a period wider when it needs the stretch
-					// to fill the block with fewer hyphenations, but that often
-					// makes citations look too stretched out. The CSL
-					// outputFormat specification can not easily do this since
-					// sometimes the period will be followed by a '}' and then a
-					// space, at a transition from one typeface to
-					// another. Thus, there is a need for post-processing the
-					// strings.
-					//
-					// But allow .! to preserve the normal space after the period.
-					//
-					if (outputFormat === "bbl") {
-						hspace = Zotero.Prefs.get("integration.hspace") || "1spc";
-						b = b.replace(/(\w\.}?) /g, "$1\\hspace{" + hspace + "}")
-							.replace(/(\w\.)! /g, "$1 "); // Remove ! from .!
-					}
 					results1.push(b);
 				}
 				return results1;
