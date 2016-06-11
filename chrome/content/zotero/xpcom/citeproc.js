@@ -34,7 +34,7 @@ if (!Array.indexOf) {
     };
 }
 var CSL = {
-    PROCESSOR_VERSION: "1.1.105",
+    PROCESSOR_VERSION: "1.1.107",
     CONDITION_LEVEL_TOP: 1,
     CONDITION_LEVEL_BOTTOM: 2,
     PLAIN_HYPHEN_REGEX: /(?:[^\\]-|\u2013)/,
@@ -6566,7 +6566,7 @@ CSL.Node["date-part"] = {
                             myform = "numeric";
                         }
                     }
-                    value = CSL.Util.Dates[this.strings.name][myform](state, value, gender, ("accessed" === date_variable));
+                    value = CSL.Util.Dates[this.strings.name][myform](state, value, gender, this.default_locale);
                     if ("month" === this.strings.name) {
                         if (state.tmp.strip_periods) {
                             value = value.replace(/\./g, "");
@@ -9552,7 +9552,7 @@ CSL.castLabel = function (state, node, term, plural, mode) {
     if (state.tmp.group_context.tip.label_form && label_form !== "static") {
         label_form = state.tmp.group_context.tip.label_form;
     }
-    var ret = state.getTerm(term, label_form, plural, false, mode);
+    var ret = state.getTerm(term, label_form, plural, false, mode, node.default_locale);
     if (state.tmp.strip_periods) {
         ret = ret.replace(/\./g, "");
     } else {
@@ -10093,7 +10093,7 @@ CSL.Node.text = {
                     func = function (state, Item, item) {
                         var gender = state.opt.gender[Item.type];
                         var term = this.strings.term;
-                        term = state.getTerm(term, form, plural, gender, false, ("accessed" === term));
+                        term = state.getTerm(term, form, plural, gender, false, this.default_locale);
                         var myterm;
                         if (term !== "") {
                             state.tmp.group_context.tip.term_intended = true;
@@ -11223,28 +11223,32 @@ CSL.Attributes["@year-range-format"] = function (state, arg) {
     state.opt["year-range-format"] = arg;
 };
 CSL.Attributes["@default-locale"] = function (state, arg) {
-    var lst, len, pos, m, ret;
-    m = arg.match(/-x-(sort|translit|translat)-/g);
-    if (m) {
-        for (pos = 0, len = m.length; pos < len; pos += 1) {
-            m[pos] = m[pos].replace(/^-x-/, "").replace(/-$/, "");
+    if (this.name === 'style') {
+        var lst, len, pos, m, ret;
+        m = arg.match(/-x-(sort|translit|translat)-/g);
+        if (m) {
+            for (pos = 0, len = m.length; pos < len; pos += 1) {
+                m[pos] = m[pos].replace(/^-x-/, "").replace(/-$/, "");
+            }
         }
-    }
-    lst = arg.split(/-x-(?:sort|translit|translat)-/);
-    ret = [lst[0]];
-    for (pos = 1, len = lst.length; pos < len; pos += 1) {
-        ret.push(m[pos - 1]);
-        ret.push(lst[pos]);
-    }
-    lst = ret.slice();
-    len = lst.length;
-    for (pos = 1; pos < len; pos += 2) {
-        state.opt[("locale-" + lst[pos])].push(lst[(pos + 1)].replace(/^\s*/g, "").replace(/\s*$/g, ""));
-    }
-    if (lst.length) {
-        state.opt["default-locale"] = lst.slice(0, 1);
-    } else {
-        state.opt["default-locale"] = ["en"];
+        lst = arg.split(/-x-(?:sort|translit|translat)-/);
+        ret = [lst[0]];
+        for (pos = 1, len = lst.length; pos < len; pos += 1) {
+            ret.push(m[pos - 1]);
+            ret.push(lst[pos]);
+        }
+        lst = ret.slice();
+        len = lst.length;
+        for (pos = 1; pos < len; pos += 2) {
+            state.opt[("locale-" + lst[pos])].push(lst[(pos + 1)].replace(/^\s*/g, "").replace(/\s*$/g, ""));
+        }
+        if (lst.length) {
+            state.opt["default-locale"] = lst.slice(0, 1);
+        } else {
+            state.opt["default-locale"] = ["en"];
+        }
+    } else if (arg === "true") {
+        this.default_locale = true;
     }
 };
 CSL.Attributes["@default-locale-sort"] = function (state, arg) {
@@ -12412,15 +12416,17 @@ CSL.NumericBlob.prototype.checkLast = function (last) {
 };
 CSL.Util.fixDateNode = function (parent, pos, node) {
     var form, variable, datexml, subnode, partname, attr, val, prefix, suffix, children, key, subchildren, kkey, display, cslid;
+    var lingo = this.cslXml.getAttributeValue(node, "lingo");
+    var default_locale = this.cslXml.getAttributeValue(node, "default-locale");
     this.build.date_key = true;
     form = this.cslXml.getAttributeValue(node, "form");
     var lingo;
-    if ("accessed" === this.cslXml.getAttributeValue(node, "variable")) {
+    if (default_locale) {
         lingo = this.opt["default-locale"][0];
     } else {
         lingo = this.cslXml.getAttributeValue(node, "lingo");
     }
-    if (!this.getDate(form)) {
+    if (!this.getDate(form, default_locale)) {
         return parent;
     }
     var dateparts = this.cslXml.getAttributeValue(node, "date-parts");
@@ -12429,12 +12435,13 @@ CSL.Util.fixDateNode = function (parent, pos, node) {
     suffix = this.cslXml.getAttributeValue(node, "suffix");
     display = this.cslXml.getAttributeValue(node, "display");
     cslid = this.cslXml.getAttributeValue(node, "cslid");
-    datexml = this.cslXml.nodeCopy(this.getDate(form, ("accessed" === variable)));
+    datexml = this.cslXml.nodeCopy(this.getDate(form, default_locale));
     this.cslXml.setAttribute(datexml, 'lingo', this.opt.lang);
     this.cslXml.setAttribute(datexml, 'form', form);
     this.cslXml.setAttribute(datexml, 'date-parts', dateparts);
     this.cslXml.setAttribute(datexml, "cslid", cslid);
     this.cslXml.setAttribute(datexml, 'variable', variable);
+    this.cslXml.setAttribute(datexml, 'default-locale', default_locale);
     if (prefix) {
         this.cslXml.setAttribute(datexml, "prefix", prefix);
     }
@@ -12444,27 +12451,35 @@ CSL.Util.fixDateNode = function (parent, pos, node) {
     if (display) {
         this.cslXml.setAttribute(datexml, "display", display);
     }
+    children = this.cslXml.children(datexml);
+    for (key in children) {
+        subnode = children[key];
+        if ("date-part" === this.cslXml.nodename(subnode)) {
+            partname = this.cslXml.getAttributeValue(subnode, "name");
+            if (default_locale) {
+                this.cslXml.setAttributeOnNodeIdentifiedByNameAttribute(datexml, "date-part", partname, "@default-locale", "true");
+            }
+        }
+    }
     children = this.cslXml.children(node);
     for (key in children) {
-            subnode = children[key];
-            if ("date-part" === this.cslXml.nodename(subnode)) {
-                partname = this.cslXml.getAttributeValue(subnode, "name");
-                subchildren = this.cslXml.attributes(subnode);
-                for (attr in subchildren) {
-                    if (subchildren.hasOwnProperty(attr)) {
-                        if ("@name" === attr) {
-                            continue;
-                        }
-                        if (lingo && lingo !== this.opt.lang) {
-                            if (["@suffix", "@prefix", "@form"].indexOf(attr) > -1) {
-                                continue;
-                            }
-                        }
-                        val = subchildren[attr];
-                        this.cslXml.setAttributeOnNodeIdentifiedByNameAttribute(datexml, "date-part", partname, attr, val);
+        subnode = children[key];
+        if ("date-part" === this.cslXml.nodename(subnode)) {
+            partname = this.cslXml.getAttributeValue(subnode, "name");
+            subchildren = this.cslXml.attributes(subnode);
+            for (attr in subchildren) {
+                if ("@name" === attr) {
+                    continue;
+                }
+                if (lingo && lingo !== this.opt.lang) {
+                    if (["@suffix", "@prefix", "@form"].indexOf(attr) > -1) {
+                        continue;
                     }
                 }
+                val = subchildren[attr];
+                this.cslXml.setAttributeOnNodeIdentifiedByNameAttribute(datexml, "date-part", partname, attr, val);
             }
+        }
     }
     if ("year" === this.cslXml.getAttributeValue(node, "date-parts")) {
         this.cslXml.deleteNodeByNameAttribute(datexml, 'month');
@@ -14365,12 +14380,12 @@ CSL.Output.Formatters.title = function (state, string) {
         return word;
     }
     function splitme (str, rex) {
-        var res, seps = str.match(rex);
-        if (seps) {
+        var m = str.match(rex);
+        if (m) {
             var splits = str.split(rex);
             res = [splits[0]];
-            for (var i=0; i<seps.length; i++) {
-                res.push(seps[i]);
+            for (var i=0; i<m.length; i++) {
+                res.push(m[i]);
                 res.push(splits[i+1]);
             }
         } else {
