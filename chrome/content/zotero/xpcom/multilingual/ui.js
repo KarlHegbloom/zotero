@@ -11,7 +11,6 @@ Zotero.EXTENDED_CREATORS = {
 		"recipient":"recipient"
 	},
 	"hearing":{
-		"testimonyBy":"author",
 		"translator":"translator"
 	},
 	"case":{

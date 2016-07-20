@@ -42,6 +42,7 @@ const CSL_NAMES_MAPPINGS = {
 	"recipient":"recipient",
 	"reviewedAuthor":"reviewed-author",
 	"seriesEditor":"collection-editor",
+	"testimonyBy":"author",
 	"translator":"translator",
 	"contributor":"contributor",
 	"authority":"authority",
