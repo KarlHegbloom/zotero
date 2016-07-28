@@ -1,4 +1,4 @@
--- 10079
+-- 10080
 
 -- Copyright (c) 2009 Center for History and New Media
 --                    George Mason University, Fairfax, Virginia, USA
@@ -1364,8 +1364,8 @@ INSERT INTO itemTypeCreatorTypes VALUES(17,13,0);
 INSERT INTO itemTypeCreatorTypes VALUES(17,23,0); -- commenter [ADDED]
 INSERT INTO itemTypeCreatorTypes VALUES(17,2,0);
 INSERT INTO itemTypeCreatorTypes VALUES(17,4,0);  -- translator [ADDED]
-INSERT INTO itemTypeCreatorTypes VALUES(18,1261,1);
-INSERT INTO itemTypeCreatorTypes VALUES(18,2,0);
+INSERT INTO itemTypeCreatorTypes VALUES(18,2,1);
+INSERT INTO itemTypeCreatorTypes VALUES(18,1261,0); -- testimonyBy [ADDED]
 INSERT INTO itemTypeCreatorTypes VALUES(18,4,0);  -- translator [ADDED]
 INSERT INTO itemTypeCreatorTypes VALUES(19,14,1);
 INSERT INTO itemTypeCreatorTypes VALUES(19,2,0);
