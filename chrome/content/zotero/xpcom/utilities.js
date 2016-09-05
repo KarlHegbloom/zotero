@@ -31,7 +31,7 @@
  * Note that this is the reverse of the text variable map, since all mappings should be one to one
  * and it makes the code cleaner
  */
-const CSL_NAMES_MAPPINGS = {
+var CSL_NAMES_MAPPINGS = {
 	"artist":"author",
 	"author":"author",
 	"editor":"editor",
@@ -53,7 +53,7 @@ const CSL_NAMES_MAPPINGS = {
  * Mappings for text variables
  * (system_id to key mapping is actually hard-wired in cite.js)
  */
-const CSL_TEXT_MAPPINGS = {
+var CSL_TEXT_MAPPINGS = {
 	"title":["title"],
 	"container-title":["publicationTitle",  "reporter", "code", "album", "websiteTitle"], /* reporter and code should move to SQL mapping tables */
 	"collection-title":["seriesTitle", "series", "parentTreaty"],
@@ -105,7 +105,7 @@ const CSL_TEXT_MAPPINGS = {
 /*
  * Mappings for dates
 */
-const CSL_DATE_MAPPINGS = {
+var CSL_DATE_MAPPINGS = {
 	"issued":["date"],
 	"original-date":["newsCaseDate","priorityDate","originalDate","adoptionDate"],
 	"submitted":["filingDate"],
@@ -115,7 +115,7 @@ const CSL_DATE_MAPPINGS = {
 	"publication-date":["publicationDate"]
 }
 
-const CSL_DATE_VARIABLES = function() {
+var CSL_DATE_VARIABLES = function() {
 	var ret = {};
 	for (var key in CSL_DATE_MAPPINGS) {
 		for (var i=0,ilen=CSL_DATE_MAPPINGS[key].length;i<ilen;i++) {
@@ -129,7 +129,7 @@ const CSL_DATE_VARIABLES = function() {
  * Mappings for types
  * Also see itemFromCSLJSON
  */
-const CSL_TYPE_MAPPINGS = {
+var CSL_TYPE_MAPPINGS = {
 	'book':"book",
 	'bookSection':'chapter',
 	'journalArticle':"article-journal",
@@ -176,7 +176,7 @@ const CSL_TYPE_MAPPINGS = {
 /**
  * Force Fields
 */
-const CSL_FORCE_FIELD_CONTENT = {
+var CSL_FORCE_FIELD_CONTENT = {
 	"tvBroadcast":{
 		"genre":"television broadcast"
 	},
@@ -194,7 +194,7 @@ const CSL_FORCE_FIELD_CONTENT = {
 	}
 }
 
-const CSL_FORCE_REMAP = {
+var CSL_FORCE_REMAP = {
 	"periodical":{
 		"title":"container-title"
 	}
@@ -553,7 +553,7 @@ Zotero.Utilities = {
 		return text;
 	},
 
-	"parseNoteFieldHacks": Zotero.CiteProc.CSL.parseNoteFieldHacks,
+	"parseNoteFieldHacks": Zotero.CiteProc ? Zotero.CiteProc.CSL.parseNoteFieldHacks : false,
 
 	/**
 	 * Removes leading and trailing whitespace from a string
@@ -1034,7 +1034,7 @@ Zotero.Utilities = {
 	 * @return {Integer[]} Start and end pages
 	 */
 	"getPageRange":function(pages) {
-		const pageRangeRegexp = /^\s*([0-9]+) ?[-\u2013] ?([0-9]+)\s*$/
+		var pageRangeRegexp = /^\s*([0-9]+) ?[-\u2013] ?([0-9]+)\s*$/
 		
 		var pageNumbers;
 		var m = pageRangeRegexp.exec(pages);
@@ -1114,13 +1114,13 @@ Zotero.Utilities = {
 	 * @type String
 	 */
 	"capitalizeTitle":function(string, force) {
-		const skipWords = ["but", "or", "yet", "so", "for", "and", "nor", "a", "an",
+		var skipWords = ["but", "or", "yet", "so", "for", "and", "nor", "a", "an",
 			"the", "at", "by", "from", "in", "into", "of", "on", "to", "with", "up",
 			"down", "as"];
-		const alwaysLowerCase = ["plc", "v"];
+		var alwaysLowerCase = ["plc", "v"];
 		
 		// this may only match a single character
-		const delimiterRegexp = /([ \/\u002D\u00AD\u2010-\u2015\u2212\u2E3A\u2E3B])/;
+		var delimiterRegexp = /([ \/\u002D\u00AD\u2010-\u2015\u2212\u2E3A\u2E3B])/;
 		
 		string = this.trimInternal(string);
 		string = string.replace(/ : /g, ": ");
@@ -1415,7 +1415,7 @@ Zotero.Utilities = {
 		if(typeof literal !== "string") {
 			throw "Argument "+literal+" must be a string in Zotero.Utilities.quotemeta()";
 		}
-		const metaRegexp = /[-[\]{}()*+?.\\^$|,#\s]/g;
+		var metaRegexp = /[-[\]{}()*+?.\\^$|,#\s]/g;
 		return literal.replace(metaRegexp, "\\$&");
 	},
 	
