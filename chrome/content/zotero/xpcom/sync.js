@@ -4417,6 +4417,7 @@ Zotero.Sync.Server.Data = new function() {
 					}
 				}
 				if (extracreators) {
+					extracreators.reverse();
 					item.creators = item.creators.concat(extracreators);
 				}
 			}
@@ -4576,7 +4577,8 @@ Zotero.Sync.Server.Data = new function() {
 		var i = 0;
 		var pos = 0;
 		var creators = Zotero.Utilities.xpath(itemNode, "creator");
-		for each(var creator in creators) {
+		for (var z=0,zlen=creators.length;z<zlen;z++) {
+			var creator = creators[z];
 			pos = parseInt(creator.getAttribute('index'));
 			if (pos != i) {
 				throw ('No creator in position ' + i);
@@ -4603,7 +4605,7 @@ Zotero.Sync.Server.Data = new function() {
 
 		// Merge creator content of an mlzsync1: prefix on the extra field
 		// into the item
-		this.decodeMlzCreators(item,obj,pos);
+		var i = this.decodeMlzCreators(item,obj,pos);
 		this.removeMlzCreatorDeletes(item,obj);
 
 		// Remove item's remaining creators not in XML
@@ -4732,6 +4734,7 @@ Zotero.Sync.Server.Data = new function() {
 	}
 
 	this.decodeMlzCreators = function(item,obj,pos) {
+		var creatorsAdded = 0;
 		// Cast and set extracreators
 		if (obj && obj.extracreators) {
 			for (var i=0,ilen=obj.extracreators.length; i<ilen; i+=1) {
@@ -4757,6 +4760,7 @@ Zotero.Sync.Server.Data = new function() {
 					creator,
 					extracreator.creatorType
 				);
+				creatorsAdded += 1;
 			}
 		}
 		// Cast and set multicreators
@@ -4792,6 +4796,7 @@ Zotero.Sync.Server.Data = new function() {
 				}
 			}
 		}
+		return (pos + creatorsAdded);
 	}
 
 	this.removeMlzCreatorDeletes = function(item,obj) {
