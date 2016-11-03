@@ -4,7 +4,7 @@ import os,sys
 import sqlite3
 from ConfigParser import ConfigParser
 #from urllib import URLopener
-import urllib
+import urllib2
 
 IANA = "http://www.iana.org/assignments/language-subtag-registry/language-subtag-registry"
 ISO = "http://www.loc.gov/standards/iso639-2/ISO-639-2_utf-8.txt"
@@ -103,12 +103,12 @@ class Build(Database):
 
     def __init__(self):
         Database.__init__(self)
-        opener = urllib.URLopener()
+        #opener = urllib.URLopener()
         spath = os.getcwd()
         sname = os.path.splitext(os.path.split(sys.argv[0])[-1])[0]
         print sname
         # input = os.path.join(spath, "%s.txt" % (sname,))
-        self.dumpfile = os.path.join(spath, "%s.sql" % (sname,))
+        self.dumpfile = os.path.join(spath, "resource", "schema", "%s.sql" % (sname,))
 
         #if not os.path.exists(input):
         #    print "\nUsage: %s.py" % sname
@@ -119,7 +119,9 @@ class Build(Database):
         #    sys.exit()
 
         print "Opening %s" % ISO
-        ifh = opener.open(ISO)
+        #ifh = opener.open(ISO)
+        req = urllib2.Request(ISO, headers={'User-Agent' : "Magic Browser"}) 
+        ifh = urllib2.urlopen( req )
         sql = 'INSERT INTO isoTagMap VALUES (?,?)'
         while 1:
             line = ifh.readline()
@@ -133,7 +135,9 @@ class Build(Database):
                     self.db.execute(sql, [line[1], line[2]])
 
         print "Opening %s" % IANA
-        ifh = opener.open(IANA)
+        #ifh = opener.open(IANA)
+        req = urllib2.Request(IANA, headers={'User-Agent' : "Magic Browser"}) 
+        ifh = urllib2.urlopen( req )
         tagDataSet = {}
         skip = False
         while 1:
@@ -143,7 +147,7 @@ class Build(Database):
             pos = line.find(":")
             if pos > -1 and line[:pos].find(" ") == -1:
                 key = line[:pos].lower().replace('-','')
-                val = line[pos+1:].strip()
+                val = line[pos+1:].strip().replace(';', ':')
                 if key == 'filedate':
                     self.filedate = val.replace('-','')
                     # This can go away after the next IANA update
@@ -161,7 +165,7 @@ class Build(Database):
                 else:
                     tagDataSet[key] = val
             elif line[0] == " ":
-                tagDataSet[key] += " %s" % (line,)
+                tagDataSet[key] += " %s" % (line.strip().replace(';', ':'),)
             elif line == "%%":
                 if skip:
                     skip = False

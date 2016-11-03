@@ -649,7 +649,8 @@ Zotero.Translate.ItemSaver.prototype = {
 			// Last true is to override unsaved-item block in toJSON()
 			var cslItem = Zotero.Utilities.itemToCSLJSON(newItem, false, false, true, true);
 			var validCslFields = Zotero.Utilities.getValidCslFields(cslItem);
-			Zotero.Utilities.parseNoteFieldHacks(cslItem, validCslFields);
+			// true is for allowDateFieldOverride
+			Zotero.Utilities.parseNoteFieldHacks(cslItem, validCslFields, true);
 			//dump("XXX CSL(after)=" + JSON.stringify(cslItem)+"\n");
 			Zotero.Utilities.itemFromCSLJSON(newItem, cslItem);
 		}
@@ -878,6 +879,7 @@ Zotero.Translate.ItemGetter = function() {
 Zotero.Translate.ItemGetter.prototype = {
 	"setItems":function(items) {
 		this._itemsLeft = items;
+		this._itemsLeft.sort(function(a, b) { return a.id - b.id; });
 		this.numItems = this._itemsLeft.length;
 	},
 	
@@ -908,6 +910,7 @@ Zotero.Translate.ItemGetter.prototype = {
 			}
 		}
 		
+		this._itemsLeft.sort(function(a, b) { return a.id - b.id; });
 		this.numItems = this._itemsLeft.length;
 	},
 	
@@ -918,6 +921,7 @@ Zotero.Translate.ItemGetter.prototype = {
 			this._collectionsLeft = Zotero.getCollections(null, true, libraryID);
 		}
 		
+		this._itemsLeft.sort(function(a, b) { return a.id - b.id; });
 		this.numItems = this._itemsLeft.length;
 	},
 	

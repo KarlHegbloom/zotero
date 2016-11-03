@@ -1052,6 +1052,12 @@ var Zotero_QuickFormat = new function () {
 	 * Handle return or escape
 	 */
 	function _onQuickSearchKeyPress(event) {
+		// Prevent hang if another key is pressed after Enter
+		// https://forums.zotero.org/discussion/59157/
+		if (accepted) {
+			event.preventDefault();
+			return;
+		}
 		if(qfGuidance) qfGuidance.hide();
 		
 		var keyCode = event.keyCode;
